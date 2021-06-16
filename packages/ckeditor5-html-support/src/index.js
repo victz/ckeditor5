@@ -8,5 +8,6 @@
  */
 
 export { default as GeneralHtmlSupport } from './generalhtmlsupport';
+export { default as HtmlComment } from './htmlcomment';
 export { default as DataFilter } from './datafilter';
 export { default as DataSchema } from './dataschema';
