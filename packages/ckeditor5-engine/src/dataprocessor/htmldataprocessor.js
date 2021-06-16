@@ -117,9 +117,9 @@ export default class HtmlDataProcessor {
 	 * @returns {DocumentFragment}
 	 */
 	_toDom( data ) {
-		const document = this._domParser.parseFromString( `<div>${ data }</div>`, 'text/html' );
-		const nodes = document.body.firstChild.childNodes;
+		const document = this._domParser.parseFromString( data, 'text/html' );
 		const fragment = document.createDocumentFragment();
+		const nodes = document.body.childNodes;
 
 		while ( nodes.length > 0 ) {
 			fragment.appendChild( nodes[ 0 ] );
