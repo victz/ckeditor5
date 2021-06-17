@@ -36,15 +36,15 @@ export default class HtmlComment extends Plugin {
 		} );
 
 		// Convert the `$comment` view element to `$comment:<unique id>` marker and store its content (the comment itself) as a $root
-		// atribute. The comment content is needed in the `dataDowncast` pipeline to re-create the comment node.
+		// attribute. The comment content is needed in the `dataDowncast` pipeline to re-create the comment node.
 		editor.conversion.for( 'upcast' ).elementToMarker( {
 			view: '$comment',
-			model: viewElement => {
+			model: ( viewElement, { writer } ) => {
+				const commentContent = viewElement.getCustomProperty( '$rawContent' );
 				const root = editor.model.document.getRoot();
 				const markerName = `$comment:${ uid() }`;
-				const commentContent = viewElement.getCustomProperty( '$rawContent' );
 
-				root._setAttribute( markerName, commentContent );
+				writer.setAttribute( markerName, commentContent, root );
 
 				return markerName;
 			}
@@ -64,6 +64,45 @@ export default class HtmlComment extends Plugin {
 
 				return comment;
 			}
+		} );
+	}
+
+	/**
+	 * Creates an HTML comment on the specified position and returns its marker.
+	 */
+	createHtmlComment( position, content ) {
+		const editor = this.editor;
+		const model = editor.model;
+		const root = model.document.getRoot();
+		const markerName = `$comment:${ uid() }`;
+
+		return model.change( writer => {
+			const range = writer.createRange( position );
+
+			const marker = writer.addMarker( markerName, {
+				usingOperation: true,
+				affectsData: true,
+				range
+			} );
+
+			writer.setAttribute( markerName, content, root );
+
+			return marker;
+		} );
+	}
+
+	/**
+	 * Removes an HTML Comment by its marker.
+	 *
+	 * @param {String} marker marker to remove.
+	 */
+	removeHtmlComment( marker ) {
+		const editor = this.editor;
+		const root = editor.model.document.getRoot();
+
+		editor.model.change( writer => {
+			writer.removeMarker( marker );
+			writer.removeAttribute( marker.name, root );
 		} );
 	}
 }
