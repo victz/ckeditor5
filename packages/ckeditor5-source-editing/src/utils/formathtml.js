@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -25,6 +25,7 @@ export function formatHtml( input ) {
 	// The list is partially based on https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements that contains
 	// a full list of HTML block-level elements.
 	// A void element is an element that cannot have any child - https://html.spec.whatwg.org/multipage/syntax.html#void-elements.
+	// Note that <pre> element is not listed on this list to avoid breaking whitespace formatting.
 	const elementsToFormat = [
 		{ name: 'address', isVoid: false },
 		{ name: 'article', isVoid: false },
@@ -57,7 +58,6 @@ export function formatHtml( input ) {
 		{ name: 'nav', isVoid: false },
 		{ name: 'ol', isVoid: false },
 		{ name: 'p', isVoid: false },
-		{ name: 'pre', isVoid: false },
 		{ name: 'section', isVoid: false },
 		{ name: 'table', isVoid: false },
 		{ name: 'tbody', isVoid: false },
@@ -73,10 +73,9 @@ export function formatHtml( input ) {
 
 	// It is not the fastest way to format the HTML markup but the performance should be good enough.
 	const lines = input
-		// Add new line before `<tag>` or `</tag>`, but only if it is not already preceded by a new line (negative lookbehind).
-		.replace( new RegExp( `(?<!\n)</?(${ elementNamesToFormat })( .*?)?>`, 'g' ), '\n$&' )
-		// Add new line after `<tag>` or `</tag>`, but only if it is not already followed by a new line (negative lookahead).
-		.replace( new RegExp( `</?(${ elementNamesToFormat })( .*?)?>(?!\n)`, 'g' ), '$&\n' )
+		// Add new line before and after `<tag>` and `</tag>`.
+		// It may separate individual elements with two new lines, but this will be fixed below.
+		.replace( new RegExp( `</?(${ elementNamesToFormat })( .*?)?>`, 'g' ), '\n$&\n' )
 		// Divide input string into lines, which start with either an opening tag, a closing tag, or just a text.
 		.split( '\n' );
 
@@ -139,5 +138,6 @@ function isClosingTag( line, elementsToFormat ) {
 // @param {String} [indentChar] Indentation character(s). 4 spaces by default.
 // @returns {String}
 function indentLine( line, indentCount, indentChar = '    ' ) {
-	return `${ indentChar.repeat( indentCount ) }${ line }`;
+	// More about Math.max() here in https://github.com/ckeditor/ckeditor5/issues/10698.
+	return `${ indentChar.repeat( Math.max( 0, indentCount ) ) }${ line }`;
 }

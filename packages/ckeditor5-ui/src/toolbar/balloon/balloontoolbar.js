@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -7,16 +7,17 @@
  * @module ui/toolbar/balloon/balloontoolbar
  */
 
-import { Plugin } from 'ckeditor5/src/core';
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
 import ContextualBalloon from '../../panel/balloon/contextualballoon';
 import ToolbarView from '../toolbarview';
-import BalloonPanelView from '../../panel/balloon/balloonpanelview.js';
+import BalloonPanelView, { generatePositions } from '../../panel/balloon/balloonpanelview.js';
 import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker';
 import Rect from '@ckeditor/ckeditor5-utils/src/dom/rect';
 import normalizeToolbarConfig from '../normalizetoolbarconfig';
 import { debounce } from 'lodash-es';
 import ResizeObserver from '@ckeditor/ckeditor5-utils/src/dom/resizeobserver';
 import toUnit from '@ckeditor/ckeditor5-utils/src/dom/tounit';
+import { env, global } from '@ckeditor/ckeditor5-utils';
 
 const toPx = toUnit( 'px' );
 
@@ -76,6 +77,13 @@ export default class BalloonToolbar extends Plugin {
 		editor.ui.once( 'ready', () => {
 			this.focusTracker.add( editor.ui.getEditableElement() );
 			this.focusTracker.add( this.toolbarView.element );
+		} );
+
+		// Register the toolbar so it becomes available for Alt+F10 and Esc navigation.
+		editor.ui.addToolbar( this.toolbarView, {
+			beforeFocus: () => this.show( true ),
+			afterBlur: () => this.hide(),
+			isContextual: true
 		} );
 
 		/**
@@ -195,12 +203,14 @@ export default class BalloonToolbar extends Plugin {
 	 * @returns {module:ui/toolbar/toolbarview~ToolbarView}
 	 */
 	_createToolbarView() {
+		const t = this.editor.locale.t;
 		const shouldGroupWhenFull = !this._balloonConfig.shouldNotGroupWhenFull;
 		const toolbarView = new ToolbarView( this.editor.locale, {
 			shouldGroupWhenFull,
 			isFloating: true
 		} );
 
+		toolbarView.ariaLabel = t( 'Editor contextual toolbar' );
 		toolbarView.render();
 
 		return toolbarView;
@@ -210,8 +220,11 @@ export default class BalloonToolbar extends Plugin {
 	 * Shows the toolbar and attaches it to the selection.
 	 *
 	 * Fires {@link #event:show} event which can be stopped to prevent the toolbar from showing up.
+	 *
+	 * @param {Boolean} [showForCollapsedSelection=false] When set `true`, the toolbar will show despite collapsed selection in the
+	 * editing view.
 	 */
-	show() {
+	show( showForCollapsedSelection = false ) {
 		const editor = this.editor;
 		const selection = editor.model.document.selection;
 		const schema = editor.model.schema;
@@ -222,7 +235,7 @@ export default class BalloonToolbar extends Plugin {
 		}
 
 		// Do not show the toolbar when the selection is collapsed.
-		if ( selection.isCollapsed ) {
+		if ( selection.isCollapsed && !showForCollapsedSelection ) {
 			return;
 		}
 
@@ -300,7 +313,7 @@ export default class BalloonToolbar extends Plugin {
 					return rangeRects[ rangeRects.length - 1 ];
 				}
 			},
-			positions: getBalloonPositions( isBackward )
+			positions: this._getBalloonPositions( isBackward )
 		};
 	}
 
@@ -345,39 +358,51 @@ export default class BalloonToolbar extends Plugin {
 	 * @protected
 	 * @event _selectionChangeDebounced
 	 */
-}
 
-// Returns toolbar positions for the given direction of the selection.
-//
-// @private
-// @param {Boolean} isBackward
-// @returns {Array.<module:utils/dom/position~Position>}
-function getBalloonPositions( isBackward ) {
-	const defaultPositions = BalloonPanelView.defaultPositions;
+	/**
+	 * Returns toolbar positions for the given direction of the selection.
+	 *
+	 * @private
+	 * @param {Boolean} isBackward
+	 * @returns {Array.<module:utils/dom/position~Position>}
+	 */
+	_getBalloonPositions( isBackward ) {
+		const isSafariIniOS = env.isSafari && env.isiOS;
 
-	return isBackward ? [
-		defaultPositions.northWestArrowSouth,
-		defaultPositions.northWestArrowSouthWest,
-		defaultPositions.northWestArrowSouthEast,
-		defaultPositions.northWestArrowSouthMiddleEast,
-		defaultPositions.northWestArrowSouthMiddleWest,
-		defaultPositions.southWestArrowNorth,
-		defaultPositions.southWestArrowNorthWest,
-		defaultPositions.southWestArrowNorthEast,
-		defaultPositions.southWestArrowNorthMiddleWest,
-		defaultPositions.southWestArrowNorthMiddleEast
-	] : [
-		defaultPositions.southEastArrowNorth,
-		defaultPositions.southEastArrowNorthEast,
-		defaultPositions.southEastArrowNorthWest,
-		defaultPositions.southEastArrowNorthMiddleEast,
-		defaultPositions.southEastArrowNorthMiddleWest,
-		defaultPositions.northEastArrowSouth,
-		defaultPositions.northEastArrowSouthEast,
-		defaultPositions.northEastArrowSouthWest,
-		defaultPositions.northEastArrowSouthMiddleEast,
-		defaultPositions.northEastArrowSouthMiddleWest
-	];
+		// https://github.com/ckeditor/ckeditor5/issues/7707
+		const positions = isSafariIniOS ? generatePositions( {
+			// 20px when zoomed out. Less then 20px when zoomed in; the "radius" of the native selection handle gets
+			// smaller as the user zooms in. No less than the default v-offset, though.
+			heightOffset: Math.max(
+				BalloonPanelView.arrowHeightOffset,
+				Math.round( 20 / global.window.visualViewport.scale )
+			)
+		} ) : BalloonPanelView.defaultPositions;
+
+		return isBackward ? [
+			positions.northWestArrowSouth,
+			positions.northWestArrowSouthWest,
+			positions.northWestArrowSouthEast,
+			positions.northWestArrowSouthMiddleEast,
+			positions.northWestArrowSouthMiddleWest,
+			positions.southWestArrowNorth,
+			positions.southWestArrowNorthWest,
+			positions.southWestArrowNorthEast,
+			positions.southWestArrowNorthMiddleWest,
+			positions.southWestArrowNorthMiddleEast
+		] : [
+			positions.southEastArrowNorth,
+			positions.southEastArrowNorthEast,
+			positions.southEastArrowNorthWest,
+			positions.southEastArrowNorthMiddleEast,
+			positions.southEastArrowNorthMiddleWest,
+			positions.northEastArrowSouth,
+			positions.northEastArrowSouthEast,
+			positions.northEastArrowSouthWest,
+			positions.northEastArrowSouthMiddleEast,
+			positions.northEastArrowSouthMiddleWest
+		];
+	}
 }
 
 // Returns "true" when the selection has multiple ranges and each range contains a selectable element
@@ -413,7 +438,7 @@ function selectionContainsOnlyMultipleSelectables( selection, schema ) {
  * You can also use `'|'` to create a separator between groups of items:
  *
  *		const config = {
- *			balloonToolbar: [ 'bold', 'italic', | 'undo', 'redo' ]
+ *			balloonToolbar: [ 'bold', 'italic', '|', 'undo', 'redo' ]
  *		};
  *
  * Read also about configuring the main editor toolbar in {@link module:core/editor/editorconfig~EditorConfig#toolbar}.

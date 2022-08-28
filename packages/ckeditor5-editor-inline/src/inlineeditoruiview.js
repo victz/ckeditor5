@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -32,6 +32,8 @@ export default class InlineEditorUIView extends EditorUIView {
 	constructor( locale, editingView, editableElement, options = {} ) {
 		super( locale );
 
+		const t = locale.t;
+
 		/**
 		 * A floating toolbar view instance.
 		 *
@@ -52,8 +54,13 @@ export default class InlineEditorUIView extends EditorUIView {
 		 * either using `position: fixed` or `position: sticky`, which would cover the
 		 * UI or vice–versa (depending on the `z-index` hierarchy).
 		 *
-		 * @readonly
+		 * Bound to {@link module:core/editor/editorui~EditorUI#viewportOffset `EditorUI#viewportOffset`}.
+		 *
+		 * If {@link module:core/editor/editorconfig~EditorConfig#ui `EditorConfig#ui.viewportOffset.top`} is defined, then
+		 * it will override the default value.
+		 *
 		 * @observable
+		 * @default 0
 		 * @member {Number} #viewportTopOffset
 		 */
 		this.set( 'viewportTopOffset', 0 );
@@ -65,8 +72,6 @@ export default class InlineEditorUIView extends EditorUIView {
 		 * @member {module:ui/panel/balloon/balloonpanelview~BalloonPanelView}
 		 */
 		this.panel = new BalloonPanelView( locale );
-
-		this.panel.withArrow = false;
 
 		/**
 		 * A set of positioning functions used by the {@link #panel} to float around
@@ -113,7 +118,7 @@ export default class InlineEditorUIView extends EditorUIView {
 		 * See: {@link module:utils/dom/position~Options#positions}.
 		 *
 		 * @readonly
-		 * @type {Array.<Function>}
+		 * @type {Array.<module:utils/dom/position~PositioningFunction>}
 		 */
 		this.panelPositions = this._getPanelPositions();
 
@@ -129,7 +134,11 @@ export default class InlineEditorUIView extends EditorUIView {
 		 * @readonly
 		 * @member {module:ui/editableui/inline/inlineeditableuiview~InlineEditableUIView}
 		 */
-		this.editable = new InlineEditableUIView( locale, editingView, editableElement );
+		this.editable = new InlineEditableUIView( locale, editingView, editableElement, {
+			label: editableView => {
+				return t( 'Rich Text Editor. Editing area: %0', editableView.name );
+			}
+		} );
 
 		/**
 		 * An instance of the resize observer that helps dynamically determine the geometry of the toolbar
@@ -204,7 +213,7 @@ export default class InlineEditorUIView extends EditorUIView {
 	 * See: {@link module:utils/dom/position~Options#positions}.
 	 *
 	 * @private
-	 * @returns {Array.<Function>}
+	 * @returns {Array.<module:utils/dom/position~PositioningFunction>}
 	 */
 	_getPanelPositions() {
 		const positions = [
@@ -212,14 +221,20 @@ export default class InlineEditorUIView extends EditorUIView {
 				return {
 					top: this._getPanelPositionTop( editableRect, panelRect ),
 					left: editableRect.left,
-					name: 'toolbar_west'
+					name: 'toolbar_west',
+					config: {
+						withArrow: false
+					}
 				};
 			},
 			( editableRect, panelRect ) => {
 				return {
 					top: this._getPanelPositionTop( editableRect, panelRect ),
 					left: editableRect.left + editableRect.width - panelRect.width,
-					name: 'toolbar_east'
+					name: 'toolbar_east',
+					config: {
+						withArrow: false
+					}
 				};
 			}
 		];
