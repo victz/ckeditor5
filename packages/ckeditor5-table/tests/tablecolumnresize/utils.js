@@ -662,6 +662,63 @@ describe( 'TableColumnResize utils', () => {
 		} );
 	} );
 
+	describe( 'getElementWidthInPixels()', () => {
+		let element;
+
+		beforeEach( () => {
+			element = document.createElement( 'div' );
+
+			document.body.appendChild( element );
+			element.style.width = '100px';
+			element.style.padding = '15px';
+			element.style.border = '10px solid #000';
+		} );
+
+		afterEach( () => {
+			element.remove();
+		} );
+
+		it( 'should return the correct width for content-box algorithm', () => {
+			expect( getElementWidthInPixels( element ) ).to.equal( 100 );
+		} );
+
+		it( 'should return the correct width for border-box algorithm', () => {
+			element.style.boxSizing = 'border-box';
+
+			expect( getElementWidthInPixels( element ) ).to.equal( 50 );
+		} );
+	} );
+
+	describe( 'getDomCellOuterWidth()', () => {
+		let tableElement, cellElement;
+
+		beforeEach( () => {
+			tableElement = document.createElement( 'table' );
+			tableElement.innerHTML = '<tr><td>foo</td></tr>';
+
+			document.body.appendChild( tableElement );
+
+			cellElement = tableElement.querySelector( 'td' );
+			cellElement.style.width = '100px';
+			cellElement.style.padding = '15px';
+			cellElement.style.border = '10px solid #000';
+		} );
+
+		afterEach( () => {
+			tableElement.remove();
+		} );
+
+		it( 'should return the correct width for content-box algorithm', () => {
+			expect( getDomCellOuterWidth( cellElement ) ).to.equal( 140 );
+		} );
+
+		it( 'should return the correct width for border-box algorithm', () => {
+			cellElement.style.boxSizing = 'border-box';
+
+			expect( getDomCellOuterWidth( cellElement ) ).to.equal( 100 );
+		} );
+	} );
+
 	describe( 'getTableWidthInPixels()', () => {
 		let editor;
 

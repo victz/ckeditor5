@@ -1,7 +1,7 @@
 {
-  "name": "@ckeditor/ckeditor5-build-classic",
-  "version": "35.1.0",
-  "description": "The classic editor build of CKEditor 5 – the best browser-based rich text editor.",
+  "name": "@victz/ckeditor5-build-classic",
+  "version": "0.0.1",
+  "description": "The customized classic editor build of CKEditor 5 with SimpleUploadAdapter plugin.",
   "keywords": [
     "ckeditor5-build",
     "ckeditor",
@@ -18,7 +18,8 @@
     "collaboration",
     "collaborative",
     "real-time",
-    "framework"
+    "framework",
+    "SimpleUploadAdapter"
   ],
   "main": "./build/ckeditor.js",
   "files": [
@@ -46,7 +47,8 @@
     "@ckeditor/ckeditor5-paragraph": "^35.1.0",
     "@ckeditor/ckeditor5-paste-from-office": "^35.1.0",
     "@ckeditor/ckeditor5-table": "^35.1.0",
-    "@ckeditor/ckeditor5-typing": "^35.1.0"
+    "@ckeditor/ckeditor5-typing": "^35.1.0",
+    "@victz/ckeditor5-simple-image-upload-plugin": "^0.0.1"
   },
   "devDependencies": {
     "@ckeditor/ckeditor5-core": "^35.1.0",
