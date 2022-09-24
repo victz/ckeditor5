@@ -2,14 +2,16 @@
 category: updating
 menu-title: Migration to v35.x
 order: 89
-modified_at: 2022-07-18
+modified_at: 2022-08-18
 ---
 
 # Migration to CKEditor 5 v35.x
 
 ## Migration to CKEditor 5 v35.1.0
 
-### Changes to API providing the accessible navigation between editing roots and toolbars on <kbd>Alt</kbd>+<kbd>F10</kbd> and <kbd>Esc</kbd> keystrokes
+### Important changes
+
+#### Changes to API providing the accessible navigation between editing roots and toolbars on <kbd>Alt</kbd>+<kbd>F10</kbd> and <kbd>Esc</kbd> keystrokes
 
 <info-box>
 	This information applies only to integrators who develop their own {@link framework/guides/custom-editor-creator editor creators} from scratch by using the {@link module:core/editor/editor~Editor} and {@link module:core/editor/editorui~EditorUI} classes as building blocks.
@@ -73,6 +75,91 @@ export default class MyEditorUI extends EditorUI {
 
 		// ...
 	}
+}
+```
+
+#### Removal of the `TooltipView` class and changes to the tooltip system
+
+<info-box>
+	Please note, that this change does not affect integrations that configure tooltips of core UI components, for instance {@link module:ui/button/buttonview~ButtonView#tooltip}.
+</info-box>
+
+Starting with v35.1.0, the `TooltipView` UI component has been removed from the [ckeditor5-ui](https://www.npmjs.com/package/@ckeditor/ckeditor5-ui) package. Instead, a new tooltip API is available based on the `data-cke-tooltip-*` DOM element attributes.
+
+It may happen that your integration creates instances of `TooltipView` and injects them into the DOM in a similar way:
+
+```js
+// ❌ Old tooltip API
+import { TooltipView } from 'ckeditor5/src/ui';
+
+const tooltip = new TooltipView();
+
+tooltip.text = 'Tooltip text';
+tooltip.position = 'sw';
+tooltip.render();
+
+DOMElementThatNeedsTooltip.appendChild( tooltip.element );
+```
+
+```css
+/* ❌ Old tooltip API */
+.dom-element-that-needs-tooltip:hover .ck-tooltip {
+	visibility: visible;
+	opacity: 1;
+}
+```
+
+If this is the case, you should now use the `data-cke-tooltip-*` attributes and let the editor's built–in {@link module:ui/tooltipmanager~TooltipManager} handle the rest:
+
+```js
+// ✅ New tooltip API
+DOMElementThatNeedsTooltip.dataset.ckeTooltipText = 'Tooltip text';
+DOMElementThatNeedsTooltip.dataset.ckeTooltipPosition = 'sw';
+```
+
+Keep in mind that you do not need to worry about showing and hiding your custom tooltips in CSS. The `TooltipManager` will attach a tooltip whenever the user moves the mouse or brings the focus to a DOM element with the `data-cke-tooltip-*` attributes. For more information, please refer to the {@link module:ui/tooltipmanager~TooltipManager} API.
+
+#### Changes to the color palette in the UI
+
+In this release, several changes were made to improve the accessibility and overall contrast of the UI. Since we understand that some integrations may prefer the previous look of the editor, we prepared a CSS snippet you can use to bring it back.
+
+For the best results, make sure the custom properties listed below are set after the main editor style sheets. For more information, please check out the {@link framework/guides/theme-customization theme customization guide}.
+
+```css
+:root {
+	--ck-color-base-border: 						hsl(0, 0%, 77%);
+	--ck-color-base-action: 						hsl(104, 44%, 48%);
+	--ck-color-base-active: 						hsl(208, 88%, 52%);
+	--ck-color-base-active-focus:					hsl(208, 88%, 47%);
+	--ck-color-focus-border-coordinates: 			208, 79%, 51%;
+	--ck-color-focus-outer-shadow: 					hsl(207, 89%, 86%);
+
+	--ck-color-button-default-hover-background: 	hsl(0, 0%, 90%);
+	--ck-color-button-default-active-background: 	hsl(0, 0%, 85%);
+	--ck-color-button-default-active-shadow: 		hsl(0, 0%, 75%);
+
+	--ck-color-button-on-background: 				hsl(0, 0%, 87%);
+	--ck-color-button-on-hover-background: 			hsl(0, 0%, 77%);
+	--ck-color-button-on-active-background: 		hsl(0, 0%, 73%);
+	--ck-color-button-on-active-shadow: 			hsl(0, 0%, 63%);
+	--ck-color-button-on-disabled-background: 		hsl(0, 0%, 87%);
+	--ck-color-button-on-color:						var(--ck-color-text);
+
+	--ck-color-button-action-hover-background: 		hsl(104, 44%, 43%);
+	--ck-color-button-action-active-background: 	hsl(104, 44%, 41%);
+	--ck-color-button-action-active-shadow: 		hsl(104, 44%, 36%);
+
+	--ck-color-switch-button-off-background:		hsl(0, 0%, 69%);
+	--ck-color-switch-button-off-hover-background:	hsl(0, 0%, 64%);
+	--ck-color-switch-button-on-hover-background: 	hsl(104, 44%, 43%);
+
+	--ck-color-input-border: 						hsl(0, 0%, 78%);
+	--ck-color-input-disabled-border: 				hsl(0, 0%, 78%);
+
+	--ck-color-list-button-on-background: 			var(--ck-color-base-active);
+	--ck-color-list-button-on-background-focus: 	var(--ck-color-base-active-focus);
+
+	--ck-color-toolbar-background: 					var(--ck-color-base-foreground);
 }
 ```
 
