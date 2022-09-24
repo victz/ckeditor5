@@ -8,12 +8,14 @@ import ClassicEditorBase from '@ckeditor/ckeditor5-editor-classic/src/classicedi
 
 import Essentials from '@ckeditor/ckeditor5-essentials/src/essentials';
 // import UploadAdapter from '@ckeditor/ckeditor5-adapter-ckfinder/src/uploadadapter';
+import Alignment from '@ckeditor/ckeditor5-alignment/src/alignment';
 import Autoformat from '@ckeditor/ckeditor5-autoformat/src/autoformat';
 import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
 import Italic from '@ckeditor/ckeditor5-basic-styles/src/italic';
 import BlockQuote from '@ckeditor/ckeditor5-block-quote/src/blockquote';
 // import CKBox from '@ckeditor/ckeditor5-ckbox/src/ckbox';
 // import CKFinder from '@ckeditor/ckeditor5-ckfinder/src/ckfinder';
+import CodeBlock from '@ckeditor/ckeditor5-code-block/src/codeblock';
 // import EasyImage from '@ckeditor/ckeditor5-easy-image/src/easyimage';
 import Heading from '@ckeditor/ckeditor5-heading/src/heading';
 import Image from '@ckeditor/ckeditor5-image/src/image';
@@ -28,11 +30,11 @@ import MediaEmbed from '@ckeditor/ckeditor5-media-embed/src/mediaembed';
 import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
 import PasteFromOffice from '@ckeditor/ckeditor5-paste-from-office/src/pastefromoffice';
 import PictureEditing from '@ckeditor/ckeditor5-image/src/pictureediting';
+import SimpleUploadImagePlugin from '@victz/ckeditor5-simple-image-upload-plugin/src/simple-upload-image-plugin';
 import Table from '@ckeditor/ckeditor5-table/src/table';
 import TableToolbar from '@ckeditor/ckeditor5-table/src/tabletoolbar';
 import TextTransformation from '@ckeditor/ckeditor5-typing/src/texttransformation';
 // import CloudServices from '@ckeditor/ckeditor5-cloud-services/src/cloudservices';
-import SimpleUploadImagePlugin from '@victz/ckeditor5-simple-image-upload-plugin/src/simple-upload-image-plugin';
 
 export default class ClassicEditor extends ClassicEditorBase {}
 
@@ -41,7 +43,9 @@ ClassicEditor.builtinPlugins = [
 	Essentials,
 	// UploadAdapter,
 	Autoformat,
+	Alignment,
 	Bold,
+	CodeBlock,
 	Italic,
 	BlockQuote,
 	// CKBox,
@@ -61,10 +65,10 @@ ClassicEditor.builtinPlugins = [
 	Paragraph,
 	PasteFromOffice,
 	PictureEditing,
+	SimpleUploadImagePlugin,
 	Table,
 	TableToolbar,
-	TextTransformation,
-	SimpleUploadImagePlugin
+	TextTransformation
 ];
 
 // Editor configuration.
@@ -78,7 +82,6 @@ ClassicEditor.defaultConfig = {
 			'link',
 			'bulletedList',
 			'numberedList',
-			'|',
 			'outdent',
 			'indent',
 			'alignment',
