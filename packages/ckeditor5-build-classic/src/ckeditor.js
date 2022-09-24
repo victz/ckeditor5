@@ -81,6 +81,8 @@ ClassicEditor.defaultConfig = {
 			'|',
 			'outdent',
 			'indent',
+			'alignment',
+			'codeBlock',
 			'|',
 			'uploadImage',
 			'blockQuote',
@@ -116,8 +118,8 @@ ClassicEditor.defaultConfig = {
 				url: /^ike\.tv\/video\/(\w+)/,
 				html: match => '<div style="position: relative; height: 300px;">' +
 					' <iframe src="https://www.ike.tv/video/embed/' + match[ 1 ] + '" ' +
-					' style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" ' +
-					' frameborder="0" allow="encrypted-media" allowfullscreen> ' +
+					' style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; border: none" ' +
+					' allow="encrypted-media" allowfullscreen> ' +
 					' </iframe> </div>'
 			}
 		],
